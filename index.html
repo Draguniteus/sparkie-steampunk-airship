@@ -6,22 +6,19 @@
   <title>Sparkie — Steampunk Airship</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { overflow: hidden; background: #1a1520; font-family: 'Georgia', serif; }
+    body { overflow: hidden; background: #050510; font-family: 'Georgia', serif; }
     canvas { display: block; }
-    #hint { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); color: rgba(200,160,100,0.5); font-size: 12px; letter-spacing: 0.08em; pointer-events: none; opacity: 1; transition: opacity 2s ease; }
-    #title { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); color: rgba(180,140,80,0.5); font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; }
+    #hint { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); color: rgba(200,150,100,0.4); font-size: 12px; letter-spacing: 0.08em; pointer-events: none; opacity: 1; transition: opacity 2s ease; }
+    #title { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); color: rgba(180,130,80,0.4); font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; }
   </style>
 </head>
 <body>
-<div id="title">⚙️ STEAMPUNK AIRSHIP 🚀</div>
+<div id="title">🎈 STEAMPUNK AIRSHIP ⚙️</div>
 <div id="hint">drag to orbit</div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -31,10 +28,10 @@ renderer.toneMappingExposure = 1.0;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1520);
+scene.background = new THREE.Color(0x050510);
 
-const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 300);
-camera.position.set(0, 5, 30);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 500);
+camera.position.set(0, 5, 35);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -42,198 +39,220 @@ controls.dampingFactor = 0.05;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.1;
 controls.maxPolarAngle = Math.PI * 0.7;
-controls.minDistance = 10;
-controls.maxDistance = 60;
+controls.minDistance = 8;
+controls.maxDistance = 80;
 
-const composer = new EffectComposer(renderer);
-composer.addPass(new THREE.RenderPass(scene, camera));
-composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.8, 0.4, 0.1));
+scene.add(new THREE.AmbientLight(0x1a1520, 0.4));
 
-scene.add(new THREE.AmbientLight(0x2a1a10, 0.4));
-const sunLight = new THREE.DirectionalLight(0xffddaa, 0.8);
-sunLight.position.set(20, 30, 10);
-scene.add(sunLight);
-
-// Clouds below
-for (let c = 0; c < 30; c++) {
-  const cloudGeo = new THREE.SphereGeometry(3 + Math.random() * 4, 12, 8);
-  const cloudMat = new THREE.MeshStandardMaterial({ color: 0x8888aa, roughness: 1.0, transparent: true, opacity: 0.8 });
-  const cloud = new THREE.Mesh(cloudGeo, cloudMat);
-  cloud.position.set((Math.random() - 0.5) * 100, -15 - Math.random() * 10, (Math.random() - 0.5) * 100);
-  cloud.scale.y = 0.4;
-  scene.add(cloud);
-}
-
-// Airship group
-const airship = new THREE.Group();
+const brassColor = 0x8a6a30;
+const copperColor = 0x8a4a2a;
+const metalMat = new THREE.MeshStandardMaterial({ color: 0x5a5a60, metalness: 0.8, roughness: 0.3 });
+const brassMat = new THREE.MeshStandardMaterial({ color: brassColor, metalness: 0.9, roughness: 0.2 });
+const copperMat = new THREE.MeshStandardMaterial({ color: copperColor, metalness: 0.85, roughness: 0.25 });
+const woodMat = new THREE.MeshStandardMaterial({ color: 0x3a2515, roughness: 0.9 });
 
 // Main hull
-const hullMat = new THREE.MeshStandardMaterial({ color: 0x8b6914, roughness: 0.7, metalness: 0.3 });
-const hull = new THREE.Mesh(new THREE.CylinderGeometry(2, 3, 12, 16), hullMat);
-hull.rotation.x = Math.PI / 2;
-airship.add(hull);
+const hullGroup = new THREE.Group();
 
-// Front cone
-const nose = new THREE.Mesh(new THREE.ConeGeometry(2, 4, 16), hullMat);
-nose.rotation.x = -Math.PI / 2;
-nose.position.z = -8;
-airship.add(nose);
+// Hull body
+const hullBody = new THREE.Mesh(new THREE.CylinderGeometry(3, 4, 15, 16), brassMat);
+hullBody.rotation.z = Math.PI / 2;
+hullGroup.add(hullBody);
 
-// Gondola
-const gondolaMat = new THREE.MeshStandardMaterial({ color: 0x4a3020, roughness: 0.8, metalness: 0.2 });
-const gondola = new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, 6), gondolaMat);
+// Hull nose cone
+const nose = new THREE.Mesh(new THREE.ConeGeometry(3, 5, 16), brassMat);
+nose.rotation.z = -Math.PI / 2;
+nose.position.x = 10;
+hullGroup.add(nose);
+
+// Hull tail
+const tail = new THREE.Mesh(new THREE.ConeGeometry(4, 3, 16), brassMat);
+tail.rotation.z = Math.PI / 2;
+tail.position.x = -9;
+hullGroup.add(tail);
+
+// Rivets on hull
+for (let r = 0; r < 60; r++) {
+  const angle = (r / 60) * Math.PI * 2;
+  const x = -7 + (r % 10) * 2;
+  const rivet = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 6, 6),
+    copperMat
+  );
+  rivet.position.set(x, Math.cos(angle) * 3.5, Math.sin(angle) * 3.5);
+  hullGroup.add(rivet);
+}
+
+// Brass rings
+for (let ring = 0; ring < 5; ring++) {
+  const torus = new THREE.Mesh(new THREE.TorusGeometry(3.5 - ring * 0.1, 0.15, 8, 24), brassMat);
+  torus.position.x = -6 + ring * 4;
+  torus.rotation.y = Math.PI / 2;
+  hullGroup.add(torus);
+}
+
+// Gondola ( underneath hull)
+const gondola = new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 6), woodMat);
 gondola.position.y = -4;
-airship.add(gondola);
+hullGroup.add(gondola);
 
 // Windows
-for (let w = 0; w < 5; w++) {
-  const winMat = new THREE.MeshStandardMaterial({ color: 0xffcc88, emissive: 0xffaa44, emissiveIntensity: 0.5 });
-  const win = new THREE.Mesh(new THREE.CircleGeometry(0.3, 8), winMat);
-  win.position.set(0, -3.75, -2 + w * 1.2);
-  airship.add(win);
+for (let w = 0; w < 8; w++) {
+  const winMat = new THREE.MeshStandardMaterial({ color: 0x4488aa, emissive: 0x224466, emissiveIntensity: 1.0 });
+  const win = new THREE.Mesh(new THREE.CircleGeometry(0.4, 12), winMat);
+  const x = -5 + w * 1.5;
+  win.position.set(x, 0, 3.2);
+  hullGroup.add(win);
+  
+  const glow = new THREE.PointLight(0x4488cc, 1, 3);
+  glow.position.set(x, 0, 3.5);
+  hullGroup.add(glow);
 }
 
 // Propellers
-for (let side of [-1.5, 1.5]) {
-  const propGroup = new THREE.Group();
+function makePropeller(x, y, z) {
+  const prop = new THREE.Group();
   
-  // Propeller hub
-  propGroup.add(new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), hullMat));
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.5, 12), copperMat);
+  hub.rotation.z = Math.PI / 2;
+  prop.add(hub);
   
-  // Blades
   for (let b = 0; b < 4; b++) {
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2, 0.3), hullMat);
-    blade.rotation.z = (b / 4) * Math.PI * 2;
-    blade.position.y = Math.sin(blade.rotation.z) * 1;
-    blade.position.x = Math.cos(blade.rotation.z) * 1;
-    propGroup.add(blade);
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.5, 0.4), brassMat);
+    blade.rotation.z = (b / 4) * Math.PI;
+    blade.position.y = Math.cos((b / 4) * Math.PI) * 1.2;
+    blade.position.x = Math.sin((b / 4) * Math.PI) * 1.2;
+    prop.add(blade);
   }
   
-  propGroup.position.set(side, -4, 2);
-  propGroup.userData.isProp = true;
-  airship.add(propGroup);
+  prop.position.set(x, y, z);
+  prop.userData.rotationSpeed = 5 + Math.random() * 3;
+  return prop;
 }
 
-// Engine exhausts
-for (let e = 0; e < 3; e++) {
-  const exhaust = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.4, 0.5, 1.5, 8),
-    new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8, metalness: 0.5 })
+const prop1 = makePropeller(8, 0, 0);
+hullGroup.add(prop1);
+const prop2 = makePropeller(-6, -2, 3);
+hullGroup.add(prop2);
+const prop3 = makePropeller(-6, -2, -3);
+hullGroup.add(prop3);
+
+// Steam exhaust pipes
+for (let p = 0; p < 4; p++) {
+  const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 2, 8), copperMat);
+  pipe.position.set(-4 + p * 2.5, 3.5, 3.3);
+  hullGroup.add(pipe);
+}
+
+// Balloon rings
+for (let b = 0; b < 8; b++) {
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(2.5, 0.08, 8, 24),
+    brassMat
   );
-  exhaust.position.set(0, -3.5, 3 + e * 0.8);
-  airship.add(exhaust);
-  
-  // Steam puff
-  const puffMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.4 });
-  const puff = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), puffMat);
-  puff.position.set(0, -3.5, 3.8 + e * 0.8);
-  puff.userData.isPuff = true;
-  airship.add(puff);
+  ring.position.x = -6 + b * 2;
+  ring.rotation.y = Math.PI / 2;
+  hullGroup.add(ring);
 }
 
-// Deck
-const deck = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.2, 7), gondolaMat);
-deck.position.y = -2.9;
-airship.add(deck);
-
-// Railings
-for (let r = 0; r < 8; r++) {
-  const angle = (r / 8) * Math.PI * 2;
-  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1, 6), new THREE.MeshStandardMaterial({ color: 0x886622, metalness: 0.8 }));
-  post.position.set(Math.cos(angle) * 1.6, -2.3, Math.sin(angle) * 3.3);
-  airship.add(post);
+// Ropes connecting balloon to hull
+for (let r = 0; r < 12; r++) {
+  const angle = (r / 12) * Math.PI * 2;
+  const rope = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.02, 0.02, 4, 4),
+    new THREE.MeshStandardMaterial({ color: 0x5a4030 })
+  );
+  rope.position.set((Math.random() - 0.5) * 14, 3, Math.sin(angle) * 2.5);
+  rope.rotation.x = Math.PI / 2 + (Math.random() - 0.5) * 0.3;
+  hullGroup.add(rope);
 }
 
-// Captain's wheel
-const wheel = new THREE.Mesh(
-  new THREE.TorusGeometry(0.6, 0.08, 8, 16),
-  new THREE.MeshStandardMaterial({ color: 0x886622, metalness: 0.8, roughness: 0.3 })
+// Navigation lights
+const redLight = new THREE.Mesh(
+  new THREE.SphereGeometry(0.15, 8, 8),
+  new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2.0 })
 );
-wheel.position.set(0, -1.5, -2);
-wheel.rotation.x = Math.PI / 2;
-airship.add(wheel);
+redLight.position.set(10, 0, 2);
+hullGroup.add(redLight);
 
-// Flags
-const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2, 6), new THREE.MeshStandardMaterial({ color: 0x886622, metalness: 0.8 }));
-flagPole.position.set(0, -1.5, -3.5);
-airship.add(flagPole);
+const greenLight = new THREE.Mesh(
+  new THREE.SphereGeometry(0.15, 8, 8),
+  new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 2.0 })
+);
+greenLight.position.set(10, 0, -2);
+hullGroup.add(greenLight);
 
-// Banner flag
-const flagMat = new THREE.MeshStandardMaterial({ color: 0xcc2200, roughness: 0.9, side: THREE.DoubleSide });
-const flag = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.6), flagMat);
-flag.position.set(0.5, -0.4, -3.5);
-flag.userData.isFlag = true;
-airship.add(flag);
+const whiteLight = new THREE.Mesh(
+  new THREE.SphereGeometry(0.2, 8, 8),
+  new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.0 })
+);
+whiteLight.position.set(10, 0, 0);
+hullGroup.add(whiteLight);
 
-// Rivets
-for (let v = 0; v < 40; v++) {
-  const rivet = new THREE.Mesh(
-    new THREE.SphereGeometry(0.05, 6, 4),
-    new THREE.MeshStandardMaterial({ color: 0xaa8833, metalness: 0.9, roughness: 0.3 })
+// Clouds
+for (let c = 0; c < 25; c++) {
+  const cloudGroup = new THREE.Group();
+  const cloudMat = new THREE.MeshStandardMaterial({ color: 0x8888aa, transparent: true, opacity: 0.6, roughness: 1 });
+  
+  for (let p = 0; p < 6; p++) {
+    const puff = new THREE.Mesh(
+      new THREE.SphereGeometry(1 + Math.random() * 2.5, 8, 8),
+      cloudMat
+    );
+    puff.position.set((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 4);
+    cloudGroup.add(puff);
+  }
+  
+  cloudGroup.position.set(
+    (Math.random() - 0.5) * 120,
+    -8 + Math.random() * 25,
+    (Math.random() - 0.5) * 120
   );
+  cloudGroup.userData.baseY = cloudGroup.position.y;
+  cloudGroup.userData.phase = Math.random() * Math.PI * 2;
+  scene.add(cloudGroup);
+}
+
+// Stars
+const starCount = 1500;
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
   const theta = Math.random() * Math.PI * 2;
-  const lat = (Math.random() - 0.5) * Math.PI;
-  rivet.position.set(
-    Math.cos(theta) * Math.cos(lat) * 2.5,
-    Math.sin(lat) * 2.5,
-    Math.cos(lat) * (Math.random() > 0.5 ? 6 : -6)
-  );
-  airship.add(rivet);
+  const r = 150 + Math.random() * 50;
+  starPos[i*3] = Math.cos(theta) * r;
+  starPos[i*3+1] = 30 + Math.random() * 80;
+  starPos[i*3+2] = Math.sin(theta) * r;
 }
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, sizeAttenuation: true })));
 
-airship.position.set(0, 0, 0);
-scene.add(airship);
-
-// Ground far below
-{
-  const groundGeo = new THREE.PlaneGeometry(200, 200, 20, 20);
-  const groundMat = new THREE.MeshStandardMaterial({ color: 0x2a3a1a, roughness: 0.95 });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -50;
-  scene.add(ground);
-}
-
-// Second airship in distance
-const airship2 = airship.clone();
-airship2.position.set(-30, 10, -40);
-airship2.scale.setScalar(0.5);
-scene.add(airship2);
-
-// Clouds around
-for (let c = 0; c < 20; c++) {
-  const cloudGeo = new THREE.SphereGeometry(2 + Math.random() * 3, 10, 6);
-  const cloudMat = new THREE.MeshStandardMaterial({ color: 0xaaaacc, roughness: 1.0, transparent: true, opacity: 0.6 });
-  const cloud = new THREE.Mesh(cloudGeo, cloudMat);
-  cloud.position.set((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 30, (Math.random() - 0.5) * 80);
-  cloud.scale.y = 0.35;
-  scene.add(cloud);
-}
+hullGroup.position.y = 5;
+scene.add(hullGroup);
 
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
   
-  airship.position.y = Math.sin(t * 0.5) * 0.5;
-  airship.rotation.z = Math.sin(t * 0.3) * 0.05;
+  prop1.rotation.x += prop1.userData.rotationSpeed * 0.05;
+  prop2.rotation.x += prop2.userData.rotationSpeed * 0.05;
+  prop3.rotation.x += prop3.userData.rotationSpeed * 0.05;
+  
+  // Gentle bobbing
+  hullGroup.position.y = 5 + Math.sin(t * 0.5) * 0.3;
+  hullGroup.rotation.z = Math.sin(t * 0.3) * 0.02;
+  hullGroup.rotation.x = Math.sin(t * 0.4) * 0.01;
   
   scene.traverse(obj => {
-    if (obj.userData.isProp) {
-      obj.rotation.z = t * 10;
-    }
-    if (obj.userData.isPuff) {
-      const baseScale = 0.5 + (Math.sin(t * 3 + obj.position.z) * 0.3 + 0.5);
-      obj.scale.setScalar(baseScale);
-      obj.material.opacity = 0.3 + Math.sin(t * 4 + obj.position.z) * 0.15;
-    }
-    if (obj.userData.isFlag) {
-      obj.rotation.y = Math.sin(t * 2) * 0.3;
+    if (obj.userData.baseY !== undefined) {
+      obj.position.y = obj.userData.baseY + Math.sin(t * 0.3 + obj.userData.phase) * 0.5;
+      obj.position.x += Math.sin(t * 0.1 + obj.userData.phase) * 0.02;
     }
   });
   
   controls.update();
-  composer.render();
+  renderer.render(scene, camera);
 }
 animate();
 
@@ -241,7 +260,6 @@ window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
-  composer.setSize(innerWidth, innerHeight);
 });
 setTimeout(() => { document.getElementById('hint').style.opacity = '0'; }, 5000);
 </script>
